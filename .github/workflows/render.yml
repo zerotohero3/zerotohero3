@@ -1,0 +1,31 @@
+# The README's images are a build artifact of render.py. Edit the source, push,
+# and this compiles it; the assets are only committed if a byte changed.
+name: render
+
+on:
+  push:
+    branches: [main]
+    paths: [render.py]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install fonttools==4.66.1 uharfbuzz==0.56.3
+      - id: build
+        run: echo "summary=$(python render.py)" >> "$GITHUB_OUTPUT"
+      - run: |
+          git add assets
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "render: ${{ steps.build.outputs.summary }}"
+          git push
