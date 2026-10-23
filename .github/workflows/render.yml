@@ -6,6 +6,8 @@ on:
   push:
     branches: [main]
     paths: [render.py]
+  schedule:
+    - cron: "17 9 * * *"  # daily, so live numbers (stars) never go stale
   workflow_dispatch:
 
 permissions:
@@ -22,6 +24,8 @@ jobs:
       - run: pip install fonttools==4.66.1 uharfbuzz==0.56.3
       - id: build
         run: echo "summary=$(python render.py)" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - run: |
           git add assets
           git diff --cached --quiet && exit 0

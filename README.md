@@ -16,8 +16,8 @@
 <br><br>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/quote.dark.svg">
-  <img src="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/quote.light.svg" width="100%" alt="“Stay hungry, stay foolish.” — Steve Jobs">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/principle.dark.svg">
+  <img src="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/principle.light.svg" width="100%" alt="precision requires rupture.">
 </picture>
 
 <br><br>
@@ -30,16 +30,12 @@
 <br><br>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/elsewhere.dark.svg">
-  <img src="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/elsewhere.light.svg" width="100%" alt="Elsewhere">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/oss.dark.svg">
+  <img src="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/oss.light.svg" width="100%" alt="Open source">
 </picture>
-<a href="https://linkedin.com/in/vhsoftdev/"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/linkedin.dark.svg">
-  <img src="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/linkedin.light.svg" width="100%" alt="LinkedIn — /in/vhsoftdev">
-</picture></a>
-<a href="https://www.instagram.com/trvpsxvnt"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/instagram.dark.svg">
-  <img src="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/instagram.light.svg" width="100%" alt="Instagram — @trvpsxvnt">
+<a href="https://github.com/modelcontextprotocol/csharp-sdk/pull/1917"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/oss-csharp-sdk-1917.dark.svg">
+  <img src="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/oss-csharp-sdk-1917.light.svg" width="100%" alt="modelcontextprotocol/csharp-sdk #1917 — Fix dropped notifications/cancelled when a request is canceled. Merged 22 Oct 2026.">
 </picture></a>
 
 <br><br>
