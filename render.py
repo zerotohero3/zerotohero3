@@ -20,6 +20,7 @@ import os
 import pathlib
 import re
 import sys
+import urllib.parse
 import urllib.request
 import webbrowser
 
@@ -363,34 +364,64 @@ def index(theme):
     return doc
 
 
-# Contributions to other people's code, newest first. `backticks` set a span in
-# mono. `stars` is only the offline fallback: builds read the live count.
-OSS = [
-    dict(
-        key="oss-csharp-sdk-1917",
-        repo="modelcontextprotocol/csharp-sdk",
-        stars=4596,
-        number=1917,
-        url="https://github.com/modelcontextprotocol/csharp-sdk/pull/1917",
-        title="Fix dropped `notifications/cancelled` when a request is canceled",
-        note="Remote handlers now actually get canceled when the caller cancels.",
-        merged="22 Oct 2026",
-        diff=(94, 4),
-    ),
-]
+# Merged PRs to other people's repos are discovered through the GitHub API on
+# every build, and the CI builds daily: merge a PR anywhere and the README picks
+# it up the next morning. assets/oss.json keeps the last answer for offline builds.
+EXCLUDE = ["digitalinnovationone"]  # owners whose PRs are course exercises, not contributions
+HIDE = set()  # "owner/repo#123" to leave a single PR out
+QUERY = "is:pr author:zerotohero3 -user:zerotohero3 " + " ".join(f"-user:{u}" for u in EXCLUDE)
+SEARCH = "https://github.com/search?type=pullrequests&q=" + urllib.parse.quote_plus(f"{QUERY} is:merged")
+
+
+def api(path):
+    req = urllib.request.Request(f"https://api.github.com/{path}", headers={"Accept": "application/vnd.github+json"})
+    if token := os.environ.get("GITHUB_TOKEN"):
+        req.add_header("Authorization", f"Bearer {token}")
+    with urllib.request.urlopen(req, timeout=10) as res:
+        return json.load(res)
+
+
+def code_spans(title):
+    """Wraps identifiers (Error.cause, notifications/cancelled, f()) in backticks,
+    unless the author already marked code in the title."""
+    if "`" in title:
+        return title
+    return re.sub(r"(?<![\w`])([A-Za-z_$][\w$]*(?:[./][A-Za-z_$][\w$]*)+(?:\(\))?)(?![\w`])", r"`\1`", title)
 
 
 @functools.cache
-def stars(repo, fallback):
-    """Live star count, so the number on the page never goes stale; offline builds keep the last known one."""
-    req = urllib.request.Request(f"https://api.github.com/repos/{repo}", headers={"Accept": "application/vnd.github+json"})
-    if token := os.environ.get("GITHUB_TOKEN"):
-        req.add_header("Authorization", f"Bearer {token}")
+def discover():
+    snapshot = OUT / "oss.json"
     try:
-        with urllib.request.urlopen(req, timeout=5) as res:
-            return json.load(res)["stargazers_count"]
-    except (OSError, ValueError, KeyError):
-        return fallback
+        items, page = [], 1
+        while True:
+            res = api(f"search/issues?per_page=100&page={page}&q={urllib.parse.quote(QUERY + ' is:merged')}")
+            items += res["items"]
+            if len(items) >= res["total_count"] or not res["items"]:
+                break
+            page += 1
+        prs = []
+        for item in items:
+            repo = item["repository_url"].split("/repos/")[1]
+            if f"{repo}#{item['number']}" in HIDE:
+                continue
+            pr = api(f"repos/{repo}/pulls/{item['number']}")
+            prs.append(dict(
+                repo=repo, number=item["number"], title=code_spans(item["title"]),
+                diff=[pr["additions"], pr["deletions"]], merged=pr["merged_at"],
+            ))
+        data = dict(
+            prs=sorted(prs, key=lambda c: c["merged"], reverse=True),
+            stars={r: api(f"repos/{r}")["stargazers_count"] for r in sorted({c["repo"] for c in prs})},
+            review=api(f"search/issues?per_page=1&q={urllib.parse.quote(QUERY + ' is:open')}")["total_count"],
+        )
+        snapshot.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+        return data
+    except (OSError, ValueError, KeyError) as e:
+        if not snapshot.exists():
+            raise SystemExit(f"GitHub API unreachable ({e}) and no {snapshot.name} to fall back on")
+        print(f"offline ({e}): using {snapshot.name}")
+        return json.loads(snapshot.read_text())
 
 
 def star(cx, cy, r, cls="ink"):
@@ -403,65 +434,140 @@ def star(cx, cy, r, cls="ink"):
     return f'<polygon class="{cls}" points="{pts}"/>'
 
 
-# (03) — open source. One compact row per contribution, so the list can grow
-# like the index above it instead of stacking cards. One image per row, so each
-# row is its own link.
-def oss_header(theme):
-    doc = Doc("oss", f"Open source — {len(OSS)} merged contribution(s)", theme)
-    doc.h = header(doc, "(03)", f"Open source — {len(OSS):02d}") + 1
+TIERS = [(50_000, "50K+"), (10_000, "10K+"), (1_000, "1K+"), (0, "Under 1K")]
+
+
+def short(n):
+    return f"{n / 1e6:.2f}m" if n >= 1e6 else f"{n / 1000:.1f}k" if n >= 1000 else str(n)
+
+
+def floor_short(n):
+    """A total as a floor: 58,815 reads 58K+, never more than is true."""
+    if n >= 1e6:
+        return f"{math.floor(n / 1e5) / 10:g}M+"
+    if n >= 1e4:
+        return f"{n // 1000}K+"
+    if n >= 1e3:
+        return f"{math.floor(n / 100) / 10:g}K+"
+    return str(n)
+
+
+def upstream():
+    """Merged PRs grouped by repo, biggest repo first, each tagged with its tier."""
+    data, repos = discover(), {}
+    for c in data["prs"]:
+        r = repos.setdefault(c["repo"], dict(name=c["repo"], stars=data["stars"][c["repo"]], prs=[]))
+        r["prs"].append(c)
+    out = sorted(repos.values(), key=lambda r: -r["stars"])
+    for r in out:
+        r["tier"] = next(name for floor, name in TIERS if r["stars"] >= floor)
+        r["key"] = "oss-" + r["name"].lower().replace("/", "-")
+        r["url"] = (
+            f"https://github.com/{r['name']}/pull/{r['prs'][0]['number']}"
+            if len(r["prs"]) == 1
+            else f"https://github.com/{r['name']}/pulls?q=is%3Apr+is%3Amerged+author%3Azerotohero3"
+        )
+    return out
+
+
+def rolled(doc, face, s, x, y, size, delay, cls="ink", track=0.0):
+    """Text whose glyphs roll up into place one by one, like the hero's readout."""
+    glyphs, adv = face.layout(s, track)
+    k = size / face.upm
+    band = doc.clip(f"roll{len(doc.body)}", x - 4, y - 0.8 * size, adv * k + 8, size)
+    cells = "".join(
+        f'<g class="ro" style="animation-delay:{delay + 0.06 * i:.2f}s">{doc.place(face, [(gid, gx)], x, y, size, cls)}</g>'
+        for i, (gid, gx) in enumerate(glyphs)
+    )
+    doc.css.append(f"@keyframes ro{{from{{transform:translateY({size:.0f}px)}}}}.ro{{animation:ro .9s {REVEAL} both}}")
+    return f'<g clip-path="url(#{band})">{cells}</g>'
+
+
+# (03) — open source. A summary set as large as the hero, then one row per
+# upstream repo, grouped into tiers by stars. render.py writes the README block.
+def oss_summary(theme):
+    repos, review = upstream(), discover()["review"]
+    merged, total = sum(len(r["prs"]) for r in repos), sum(r["stars"] for r in repos)
+    in_review = f", {review} open in review" if review else ""
+    doc = Doc("oss", f"Open source: {merged} merged pull requests across {len(repos)} external projects, {short(total)} combined stars{in_review}.", theme)
+    top = header(doc, "(03)", "Open source")
+    size = 68
+    b = top + 40 + 0.71 * size
+    stats = [(floor_short(total), "Combined stars"), (f"{merged:02d}", "Merged PRs"), (f"{len(repos):02d}", "Projects")]
+    if review:
+        stats.append((f"{review:02d}", "Open in review"))  # only when something is in review
+    # Edge to edge: the first sits on the left margin, the last on the right.
+    # Three blocks put the middle one on the page's axis, like the hero's (00);
+    # four share the space with equal gaps.
+    blocks = [max(bold.width(v, size, -0.04), mono.width(n.upper(), LABEL["size"], LABEL["track"])) for v, n in stats]
+    gap, cursor = (W - sum(blocks)) / (len(stats) - 1), 0
+    for i, ((value, name), bw) in enumerate(zip(stats, blocks)):
+        anchor = "start" if i == 0 else "end" if i == len(stats) - 1 else "middle"
+        x = cursor + {"start": 0, "middle": bw / 2, "end": bw}[anchor]
+        if len(stats) == 3 and i == 1:
+            x = W / 2
+        w = bold.width(value, size, -0.04)
+        start = x - {"start": 0, "middle": w / 2, "end": w}[anchor]
+        doc.add(rolled(doc, bold, value, start, b, size, 0.15 + 0.2 * i, track=-0.04), label(doc, name, x, b + 30, anchor=anchor))
+        cursor += bw + gap
+    doc.h = b + 52
     return doc
 
 
-def contribution(theme, n, c):
-    count = stars(c["repo"], c["stars"])
-    shown = f"{count / 1000:.1f}k" if count >= 1000 else str(count)
-    title = c["title"].replace("`", "")
-    doc = Doc(c["key"], f"{c['repo']} ({shown} stars) #{c['number']} — {title}. Merged {c['merged']}.", theme)
+def oss_row(theme, r, first):
+    names = ", ".join(f"#{c['number']} {c['title'].replace('`', '')}" for c in r["prs"])
+    doc = Doc(r["key"], f"{r['name']} — {short(r['stars'])} stars — {names}", theme)
+    y = 0
+    if first:
+        count = sum(1 for o in upstream() if o["tier"] == r["tier"])
+        doc.add(label(doc, f"{r['tier']} stars", 0, 58, "ink"), label(doc, f"({count:02d})", W, 58, anchor="end"))
+        y = 74
+        doc.rule(y)
 
-    y = 32
-    x = 48 + mono.width(c["repo"], 13, 0.04) + 24
-    doc.add(
-        label(doc, f"{n:02d}", 0, y),
-        doc.text(mono, c["repo"], 48, y, 13, "ink", track=0.04),
-        star(x + 5, y - 4.5, 6),
-        label(doc, shown, x + 16, y, "ink"),
-        label(doc, f"#{c['number']}", x + 16 + mono.width(shown.upper(), LABEL["size"], LABEL["track"]) + 20, y),
-        label(doc, f"+{c['diff'][0]} −{c['diff'][1]}   ·   Merged {c['merged']}", W, y, anchor="end"),
-    )
-
-    # The title fits on one line beside the arrow; code spans are set in mono.
-    runs = [(mono if i % 2 else sans, run) for i, run in enumerate(c["title"].split("`")) if run]
+    owner, repo = r["name"].split("/")
     size = 30
-    fit = lambda fs: sum(f.width(r, fs * (0.9 if f is mono else 1)) for f, r in runs)
-    while fit(size) > W - 48 - 80:
-        size -= 1
-    y += 46
-    x = 48
-    for face, run in runs:
-        fs = size * (0.9 if face is mono else 1)
-        doc.add(doc.text(face, run, x, y, fs))
-        x += face.width(run, fs)
-    arrow(doc, y, n)
+    y += 56
+    doc.add(
+        doc.text(sans, owner + "/", 0, y, size, "mute", track=-0.02),
+        doc.text(sans, repo, sans.width(owner + "/", size, -0.02), y, size, track=-0.02),
+    )
+    x = sans.width(r["name"], size, -0.02) + 12
+    doc.add(doc.text(mono, "↗", x, y - 2, 18, "acc"))
+    value, vs = short(r["stars"]).upper(), 24
+    vw = bold.width(value, vs, -0.03)
+    doc.add(star(W - vw - 14, y - 0.36 * vs, 6.5), doc.text(bold, value, W, y, vs, anchor="end", track=-0.03))
 
-    y += 34
-    doc.add(doc.text(serif, c["note"], 48, y, 22, "mute"))
-    doc.h = y + 24
+    # One line per PR: number, title (code spans in mono), diff.
+    for c in r["prs"]:
+        y += 36
+        diff = f"+{c['diff'][0]} −{c['diff'][1]}"
+        doc.add(label(doc, f"#{c['number']}", 0, y), label(doc, diff, W, y, anchor="end"))
+        runs = [(mono if i % 2 else sans, run) for i, run in enumerate(c["title"].split("`")) if run]
+        room = W - 90 - mono.width(diff, LABEL["size"], LABEL["track"]) - 40
+        fs = 18
+        while sum(f.width(t, fs * (0.9 if f is mono else 1)) for f, t in runs) > room:
+            fs -= 0.5
+        x = 90
+        for face, run in runs:
+            doc.add(doc.text(face, run, x, y + 1, fs * (0.9 if face is mono else 1)))
+            x += face.width(run, fs * (0.9 if face is mono else 1))
+    doc.h = y + 28
     doc.rule(doc.h - 1)
     return doc
 
 
-def arrow(doc, b, n):
-    """The arrow exits up-right and re-enters from below-left, like a hover that hovers itself."""
-    a = 60
-    box = doc.clip("arrow", W - 60, b - 46, 60, 60)
-    glyph = doc.text(sans, "↗", W - 6, b, 40, "acc", "end")
-    doc.add(f'<g clip-path="url(#{box})"><g class="ar" style="animation-delay:{1.2 + 1.6 * n:.1f}s">{glyph}</g></g>')
-    doc.css.append(
-        f"@keyframes ar{{0%,80%{{transform:none;animation-timing-function:cubic-bezier(.7,0,.84,0)}}"
-        f"88%{{transform:translate({a}px,-{a}px);animation-timing-function:step-end}}"
-        f"89%{{transform:translate(-{a}px,{a}px);animation-timing-function:{REVEAL}}}to{{transform:none}}}}"
-        f".ar{{animation:ar 5s infinite}}"
-    )
+def oss_more(theme):
+    doc = Doc("oss-more", "All merged pull requests", theme)
+    doc.add(label(doc, "All merged PRs", W - 22, 34, anchor="end"), doc.text(mono, "↗", W, 34, 14, "acc", "end"))
+    doc.h = 48
+    return doc
+
+
+def oss(theme):
+    repos = upstream()
+    docs = [oss_summary(theme)]
+    docs += [oss_row(theme, r, i == 0 or r["tier"] != repos[i - 1]["tier"]) for i, r in enumerate(repos)]
+    return docs + [oss_more(theme)]
 
 
 def colophon(theme, rev):
@@ -511,6 +617,23 @@ theme(matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); wi
 """
 
 
+def readme(titles):
+    """Rewrites the open source block of README.md: one linked image per repo."""
+    def pic(key):
+        return (
+            f'<picture>\n  <source media="(prefers-color-scheme: dark)" srcset="{RAW}{key}.dark.svg">\n'
+            f'  <img src="{RAW}{key}.light.svg" width="100%" alt="{html.escape(titles[key])}">\n</picture>'
+        )
+
+    lines = [pic("oss")]
+    lines += [f'<a href="{html.escape(r["url"])}">{pic(r["key"])}</a>' for r in upstream()]
+    lines.append(f'<a href="{html.escape(SEARCH)}">{pic("oss-more")}</a>')
+    block = "<!-- oss: generated by render.py -->\n" + "\n".join(lines) + "\n<!-- /oss -->"
+    path = ROOT / "README.md"
+    text = path.read_text()
+    path.write_text(re.sub(r"<!-- oss: generated by render.py -->.*?<!-- /oss -->", lambda _: block, text, flags=re.S))
+
+
 def preview():
     md = re.sub(r"<!--.*?-->", "", (ROOT / "README.md").read_text(), flags=re.S)
     md = md.replace(RAW, OUT.as_uri() + "/")
@@ -525,17 +648,21 @@ def preview():
 
 def main():
     OUT.mkdir(exist_ok=True)
-    files = {}
+    files, titles = {}, {}
     for theme in THEMES:
-        docs = [hero(theme), principle(theme), index(theme), oss_header(theme)]
-        docs += [contribution(theme, n, c) for n, c in enumerate(OSS)]
+        docs = [hero(theme), principle(theme), index(theme)] + oss(theme)
         for doc in docs:
             files[f"{doc.name}.{theme}.svg"] = doc.svg()
+            titles[doc.name] = doc.title
     rev = hashlib.sha1("".join(files[k] for k in sorted(files)).encode()).hexdigest()[:7]
     for theme in THEMES:
         files[f"colophon.{theme}.svg"] = colophon(theme, rev).svg()
     for name, svg in files.items():
         (OUT / name).write_text(svg)
+    for stale in OUT.glob("*.svg"):
+        if stale.name not in files:
+            stale.unlink()
+    readme(titles)
     print(f"rev {rev} · {len(files)} files · {sum(map(len, files.values())) / 1024:.0f} KB")
 
 

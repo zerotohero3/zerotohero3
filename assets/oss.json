@@ -1,0 +1,29 @@
+{
+  "prs": [
+    {
+      "repo": "ChromeDevTools/chrome-devtools-mcp",
+      "number": 3338,
+      "title": "fix(console): stop resolving a cyclic `Error.cause` chain after 10 causes",
+      "diff": [
+        93,
+        14
+      ],
+      "merged": "2026-10-26T14:22:27Z"
+    },
+    {
+      "repo": "modelcontextprotocol/csharp-sdk",
+      "number": 1917,
+      "title": "Fix dropped `notifications/cancelled` when a request is canceled",
+      "diff": [
+        94,
+        4
+      ],
+      "merged": "2026-10-22T21:05:33Z"
+    }
+  ],
+  "stars": {
+    "ChromeDevTools/chrome-devtools-mcp": 54214,
+    "modelcontextprotocol/csharp-sdk": 4601
+  },
+  "review": 0
+}
