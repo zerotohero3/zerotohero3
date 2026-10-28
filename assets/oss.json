@@ -2,6 +2,16 @@
   "prs": [
     {
       "repo": "ChromeDevTools/chrome-devtools-mcp",
+      "number": 3357,
+      "title": "fix(network): start an empty request list for navigations without a request",
+      "diff": [
+        33,
+        3
+      ],
+      "merged": "2026-10-28T10:02:34Z"
+    },
+    {
+      "repo": "ChromeDevTools/chrome-devtools-mcp",
       "number": 3338,
       "title": "fix(console): stop resolving a cyclic `Error.cause` chain after 10 causes",
       "diff": [
@@ -22,8 +32,8 @@
     }
   ],
   "stars": {
-    "ChromeDevTools/chrome-devtools-mcp": 54261,
-    "modelcontextprotocol/csharp-sdk": 4601
+    "ChromeDevTools/chrome-devtools-mcp": 54350,
+    "modelcontextprotocol/csharp-sdk": 4604
   },
-  "review": 1
+  "review": 0
 }
