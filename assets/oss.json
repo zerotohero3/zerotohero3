@@ -32,8 +32,8 @@
     }
   ],
   "stars": {
-    "ChromeDevTools/chrome-devtools-mcp": 54418,
-    "modelcontextprotocol/csharp-sdk": 4604
+    "ChromeDevTools/chrome-devtools-mcp": 54487,
+    "modelcontextprotocol/csharp-sdk": 4605
   },
-  "review": 2
+  "review": 5
 }
