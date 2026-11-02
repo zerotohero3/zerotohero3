@@ -367,10 +367,12 @@ def index(theme):
 # Merged PRs to other people's repos are discovered through the GitHub API on
 # every build, and the CI builds daily: merge a PR anywhere and the README picks
 # it up the next morning. assets/oss.json keeps the last answer for offline builds.
+USER = "zerotohero3"
 EXCLUDE = ["digitalinnovationone"]  # owners whose PRs are course exercises, not contributions
 HIDE = set()  # "owner/repo#123" to leave a single PR out
-QUERY = "is:pr author:zerotohero3 -user:zerotohero3 " + " ".join(f"-user:{u}" for u in EXCLUDE)
-SEARCH = "https://github.com/search?type=pullrequests&q=" + urllib.parse.quote_plus(f"{QUERY} is:merged")
+QUERY = f"is:pr author:{USER} -user:{USER} " + " ".join(f"-user:{u}" for u in EXCLUDE)
+# Every state: GitHub search can't express "merged, or landed as a commit".
+SEARCH = "https://github.com/search?type=pullrequests&q=" + urllib.parse.quote_plus(QUERY)
 
 
 def api(path):
@@ -389,30 +391,59 @@ def code_spans(title):
     return re.sub(r"(?<![\w`])([A-Za-z_$][\w$]*(?:[./][A-Za-z_$][\w$]*)+(?:\(\))?)(?![\w`])", r"`\1`", title)
 
 
+def search(q):
+    items, page = [], 1
+    while True:
+        res = api(f"search/issues?per_page=100&page={page}&q={urllib.parse.quote(q)}")
+        items += res["items"]
+        if len(items) >= res["total_count"] or not res["items"]:
+            return items
+        page += 1
+
+
+@functools.cache
+def repo_info(name):
+    return api(f"repos/{name}")
+
+
+def landed(repo, number):
+    """Some projects (curl, for one) apply the patch to their default branch
+    themselves and close the PR, so GitHub reports it unmerged. It counts when it
+    was closed by a commit authored by USER that is on the default branch.
+    Returns when it was closed, or None."""
+    closes = [e for e in api(f"repos/{repo}/issues/{number}/events?per_page=100") if e["event"] == "closed" and e["commit_id"]]
+    if not closes:
+        return None
+    sha = closes[-1]["commit_id"]
+    if (api(f"repos/{repo}/commits/{sha}").get("author") or {}).get("login") != USER:
+        return None
+    branch = repo_info(repo)["default_branch"]
+    if api(f"repos/{repo}/compare/{sha}...{branch}")["status"] not in ("ahead", "identical"):
+        return None
+    return closes[-1]["created_at"]
+
+
 @functools.cache
 def discover():
     snapshot = OUT / "oss.json"
     try:
-        items, page = [], 1
-        while True:
-            res = api(f"search/issues?per_page=100&page={page}&q={urllib.parse.quote(QUERY + ' is:merged')}")
-            items += res["items"]
-            if len(items) >= res["total_count"] or not res["items"]:
-                break
-            page += 1
         prs = []
-        for item in items:
+        for item in search(QUERY + " is:merged") + search(QUERY + " is:closed is:unmerged"):
             repo = item["repository_url"].split("/repos/")[1]
             if f"{repo}#{item['number']}" in HIDE:
                 continue
             pr = api(f"repos/{repo}/pulls/{item['number']}")
+            when = pr["merged_at"] or landed(repo, item["number"])
+            if not when:
+                continue  # closed without landing: declined or superseded
             prs.append(dict(
                 repo=repo, number=item["number"], title=code_spans(item["title"]),
-                diff=[pr["additions"], pr["deletions"]], merged=pr["merged_at"],
+                diff=[pr["additions"], pr["deletions"]], merged=when,
+                via="merge" if pr["merged_at"] else "commit",
             ))
         data = dict(
             prs=sorted(prs, key=lambda c: c["merged"], reverse=True),
-            stars={r: api(f"repos/{r}")["stargazers_count"] for r in sorted({c["repo"] for c in prs})},
+            stars={r: repo_info(r)["stargazers_count"] for r in sorted({c["repo"] for c in prs})},
             review=api(f"search/issues?per_page=1&q={urllib.parse.quote(QUERY + ' is:open')}")["total_count"],
         )
         snapshot.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
@@ -462,10 +493,12 @@ def upstream():
     for r in out:
         r["tier"] = next(name for floor, name in TIERS if r["stars"] >= floor)
         r["key"] = "oss-" + r["name"].lower().replace("/", "-")
+        # PRs that landed as commits show as closed, not merged, in GitHub's search.
+        state = "merged" if all(c.get("via") == "merge" for c in r["prs"]) else "closed"
         r["url"] = (
             f"https://github.com/{r['name']}/pull/{r['prs'][0]['number']}"
             if len(r["prs"]) == 1
-            else f"https://github.com/{r['name']}/pulls?q=is%3Apr+is%3Amerged+author%3Azerotohero3"
+            else f"https://github.com/{r['name']}/pulls?q=is%3Apr+is%3A{state}+author%3A{USER}"
         )
     return out
 
@@ -557,8 +590,8 @@ def oss_row(theme, r, first):
 
 
 def oss_more(theme):
-    doc = Doc("oss-more", "All merged pull requests", theme)
-    doc.add(label(doc, "All merged PRs", W - 22, 34, anchor="end"), doc.text(mono, "↗", W, 34, 14, "acc", "end"))
+    doc = Doc("oss-more", "All pull requests", theme)
+    doc.add(label(doc, "All pull requests", W - 22, 34, anchor="end"), doc.text(mono, "↗", W, 34, 14, "acc", "end"))
     doc.h = 48
     return doc
 

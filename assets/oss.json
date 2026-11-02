@@ -1,6 +1,28 @@
 {
   "prs": [
     {
+      "repo": "curl/curl",
+      "number": 23684,
+      "title": "digest: only percent-encode control codes in quoted values",
+      "diff": [
+        8,
+        7
+      ],
+      "merged": "2026-11-02T13:41:26Z",
+      "via": "commit"
+    },
+    {
+      "repo": "curl/curl",
+      "number": 23682,
+      "title": "peer: use the given proxy port, fall back to the documented default",
+      "diff": [
+        76,
+        3
+      ],
+      "merged": "2026-10-30T17:24:05Z",
+      "via": "commit"
+    },
+    {
       "repo": "ChromeDevTools/chrome-devtools-mcp",
       "number": 3357,
       "title": "fix(network): start an empty request list for navigations without a request",
@@ -8,7 +30,8 @@
         33,
         3
       ],
-      "merged": "2026-10-28T10:02:34Z"
+      "merged": "2026-10-28T10:02:34Z",
+      "via": "merge"
     },
     {
       "repo": "ChromeDevTools/chrome-devtools-mcp",
@@ -18,7 +41,8 @@
         93,
         14
       ],
-      "merged": "2026-10-26T14:22:27Z"
+      "merged": "2026-10-26T14:22:27Z",
+      "via": "merge"
     },
     {
       "repo": "modelcontextprotocol/csharp-sdk",
@@ -28,11 +52,13 @@
         94,
         4
       ],
-      "merged": "2026-10-22T21:05:33Z"
+      "merged": "2026-10-22T21:05:33Z",
+      "via": "merge"
     }
   ],
   "stars": {
-    "ChromeDevTools/chrome-devtools-mcp": 54657,
+    "ChromeDevTools/chrome-devtools-mcp": 54659,
+    "curl/curl": 43349,
     "modelcontextprotocol/csharp-sdk": 4613
   },
   "review": 4
