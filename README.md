@@ -46,10 +46,6 @@
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/oss-modelcontextprotocol-csharp-sdk.dark.svg">
   <img src="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/oss-modelcontextprotocol-csharp-sdk.light.svg" width="100%" alt="modelcontextprotocol/csharp-sdk — 4.6k stars — #1917 Fix dropped notifications/cancelled when a request is canceled">
 </picture></a>
-<a href="https://github.com/search?type=pullrequests&amp;q=is%3Apr+author%3Azerotohero3+-user%3Azerotohero3+-user%3Adigitalinnovationone"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/oss-more.dark.svg">
-  <img src="https://raw.githubusercontent.com/zerotohero3/zerotohero3/main/assets/oss-more.light.svg" width="100%" alt="All pull requests">
-</picture></a>
 <!-- /oss -->
 
 <br><br>
