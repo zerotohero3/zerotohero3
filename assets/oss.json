@@ -1,6 +1,17 @@
 {
   "prs": [
     {
+      "repo": "webpack/webpack",
+      "number": 23090,
+      "title": "fix(cjs): build a CommonJS re-export of an ES module inside a cycle",
+      "diff": [
+        67,
+        4
+      ],
+      "merged": "2026-11-03T09:22:25Z",
+      "via": "merge"
+    },
+    {
       "repo": "curl/curl",
       "number": 23684,
       "title": "digest: only percent-encode control codes in quoted values",
@@ -57,9 +68,10 @@
     }
   ],
   "stars": {
-    "ChromeDevTools/chrome-devtools-mcp": 54664,
-    "curl/curl": 43349,
-    "modelcontextprotocol/csharp-sdk": 4614
+    "ChromeDevTools/chrome-devtools-mcp": 54729,
+    "curl/curl": 43364,
+    "modelcontextprotocol/csharp-sdk": 4615,
+    "webpack/webpack": 65988
   },
-  "review": 4
+  "review": 5
 }
