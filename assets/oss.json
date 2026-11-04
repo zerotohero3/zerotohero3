@@ -1,6 +1,17 @@
 {
   "prs": [
     {
+      "repo": "tailwindlabs/tailwindcss",
+      "number": 20658,
+      "title": "Don't crash on a `color-mix(…)` with a single color and no interpolation method",
+      "diff": [
+        37,
+        1
+      ],
+      "merged": "2026-11-04T18:27:24Z",
+      "via": "merge"
+    },
+    {
       "repo": "webpack/webpack",
       "number": 23090,
       "title": "fix(cjs): build a CommonJS re-export of an ES module inside a cycle",
@@ -68,10 +79,11 @@
     }
   ],
   "stars": {
-    "ChromeDevTools/chrome-devtools-mcp": 54785,
-    "curl/curl": 43376,
+    "ChromeDevTools/chrome-devtools-mcp": 54799,
+    "curl/curl": 43390,
     "modelcontextprotocol/csharp-sdk": 4614,
-    "webpack/webpack": 65991
+    "tailwindlabs/tailwindcss": 98064,
+    "webpack/webpack": 65993
   },
-  "review": 5
+  "review": 4
 }
