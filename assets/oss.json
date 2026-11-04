@@ -68,10 +68,10 @@
     }
   ],
   "stars": {
-    "ChromeDevTools/chrome-devtools-mcp": 54729,
-    "curl/curl": 43364,
-    "modelcontextprotocol/csharp-sdk": 4615,
-    "webpack/webpack": 65988
+    "ChromeDevTools/chrome-devtools-mcp": 54785,
+    "curl/curl": 43376,
+    "modelcontextprotocol/csharp-sdk": 4614,
+    "webpack/webpack": 65991
   },
   "review": 5
 }
