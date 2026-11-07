@@ -7,7 +7,7 @@ on:
     branches: [main]
     paths: [render.py]
   schedule:
-    - cron: "17 9 * * *"  # daily, so live numbers (stars) never go stale
+    - cron: "17 21 * * *"  # daily, so live numbers (stars) never go stale
   workflow_dispatch:
 
 permissions:
