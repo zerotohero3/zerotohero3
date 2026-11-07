@@ -1,6 +1,17 @@
 {
   "prs": [
     {
+      "repo": "mozilla/pdf.js",
+      "number": 22417,
+      "title": "Keep the stacks aligned on their top in `PSStackToTree`",
+      "diff": [
+        77,
+        16
+      ],
+      "merged": "2026-11-06T20:28:09Z",
+      "via": "merge"
+    },
+    {
       "repo": "tailwindlabs/tailwindcss",
       "number": 20658,
       "title": "Don't crash on a `color-mix(…)` with a single color and no interpolation method",
@@ -79,11 +90,12 @@
     }
   ],
   "stars": {
-    "ChromeDevTools/chrome-devtools-mcp": 54877,
-    "curl/curl": 43401,
+    "ChromeDevTools/chrome-devtools-mcp": 54894,
+    "curl/curl": 43414,
     "modelcontextprotocol/csharp-sdk": 4615,
-    "tailwindlabs/tailwindcss": 98112,
-    "webpack/webpack": 65992
+    "mozilla/pdf.js": 54105,
+    "tailwindlabs/tailwindcss": 98169,
+    "webpack/webpack": 65994
   },
-  "review": 4
+  "review": 3
 }
