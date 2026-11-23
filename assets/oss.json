@@ -90,12 +90,12 @@
     }
   ],
   "stars": {
-    "ChromeDevTools/chrome-devtools-mcp": 58697,
-    "curl/curl": 43669,
-    "modelcontextprotocol/csharp-sdk": 4642,
-    "mozilla/pdf.js": 54169,
-    "tailwindlabs/tailwindcss": 98698,
-    "webpack/webpack": 66017
+    "ChromeDevTools/chrome-devtools-mcp": 58850,
+    "curl/curl": 43674,
+    "modelcontextprotocol/csharp-sdk": 4644,
+    "mozilla/pdf.js": 54174,
+    "tailwindlabs/tailwindcss": 98711,
+    "webpack/webpack": 66021
   },
   "review": 4
 }
