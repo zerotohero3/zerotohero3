@@ -1,6 +1,17 @@
 {
   "prs": [
     {
+      "repo": "puppeteer/puppeteer",
+      "number": 15830,
+      "title": "feat: add `Target.close()`",
+      "diff": [
+        726,
+        22
+      ],
+      "merged": "2026-11-25T10:50:40Z",
+      "via": "merge"
+    },
+    {
       "repo": "mozilla/pdf.js",
       "number": 22417,
       "title": "Keep the stacks aligned on their top in `PSStackToTree`",
@@ -90,12 +101,13 @@
     }
   ],
   "stars": {
-    "ChromeDevTools/chrome-devtools-mcp": 59241,
-    "curl/curl": 43671,
+    "ChromeDevTools/chrome-devtools-mcp": 59299,
+    "curl/curl": 43674,
     "modelcontextprotocol/csharp-sdk": 4650,
-    "mozilla/pdf.js": 54184,
-    "tailwindlabs/tailwindcss": 98780,
+    "mozilla/pdf.js": 54185,
+    "puppeteer/puppeteer": 95902,
+    "tailwindlabs/tailwindcss": 98821,
     "webpack/webpack": 66016
   },
-  "review": 4
+  "review": 3
 }
