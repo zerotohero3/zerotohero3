@@ -101,13 +101,13 @@
     }
   ],
   "stars": {
-    "ChromeDevTools/chrome-devtools-mcp": 59379,
-    "curl/curl": 43686,
-    "modelcontextprotocol/csharp-sdk": 4651,
-    "mozilla/pdf.js": 54190,
-    "puppeteer/puppeteer": 95906,
-    "tailwindlabs/tailwindcss": 98835,
-    "webpack/webpack": 66018
+    "ChromeDevTools/chrome-devtools-mcp": 59523,
+    "curl/curl": 43695,
+    "modelcontextprotocol/csharp-sdk": 4659,
+    "mozilla/pdf.js": 54198,
+    "puppeteer/puppeteer": 95912,
+    "tailwindlabs/tailwindcss": 98853,
+    "webpack/webpack": 66019
   },
   "review": 3
 }
